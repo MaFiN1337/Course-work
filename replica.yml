@@ -1,0 +1,11 @@
+fuse:
+  dir: "/tmp/replica_mnt"
+data:
+  dir: "/tmp/replica_data"
+http:
+  addr: ":20203"
+lease:
+  type: "static"
+  candidate: false
+  hostname: "replica"
+  advertise-url: "http://localhost:20202"

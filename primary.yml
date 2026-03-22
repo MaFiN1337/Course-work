@@ -1,0 +1,10 @@
+fuse:
+  dir: "/tmp/primary_mnt"
+data:
+  dir: "/tmp/primary_data"
+http:
+  addr: ":20202"
+lease:
+  type: "static"
+  candidate: true
+  advertise-url: "http://localhost:20202"
