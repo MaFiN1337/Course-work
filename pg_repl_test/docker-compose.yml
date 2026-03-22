@@ -1,0 +1,44 @@
+services:
+  pg-primary:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: supersecret
+      POSTGRES_DB: bottleneck_db
+    command: |
+      postgres
+        -c wal_level=replica
+        -c max_wal_senders=10
+        -c max_replication_slots=10
+        -c hot_standby=on
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_master_data:/var/lib/postgresql/data
+      - ./primary-init.sh:/docker-entrypoint-initdb.d/init.sh
+
+  pg-replica:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: supersecret
+      PGPASSWORD: repl_password
+    entrypoint: >
+      bash -c "
+        until pg_basebackup -h pg-primary -U repl_user -D /var/lib/postgresql/data -Fp -Xs -P -R --checkpoint=fast; do
+          echo 'Waiting for primary...'; sleep 2;
+        done &&
+        chown -R postgres:postgres /var/lib/postgresql/data &&
+        chmod 700 /var/lib/postgresql/data &&
+        exec gosu postgres postgres
+      "
+    ports:
+      - "5433:5432"
+    volumes:
+      - pg_replica_data:/var/lib/postgresql/data
+    depends_on:
+      - pg-primary
+
+volumes:
+  pg_master_data:
+  pg_replica_data:
